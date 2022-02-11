@@ -51,9 +51,11 @@ class ReportLogPlugin:
         try:
             outcome = data.get('outcome')
             if outcome and outcome != 'passed':
-                data = {'outcome': outcome, 'location': data['location']}
+                add_data = {}
                 if outcome != 'skipped':
-                    data['message'] = data['longrepr']['reprcrash']['message']
+                    add_data['message'] = data['longrepr']['reprcrash']['message']
+                data = {'outcome': outcome, 'location': data['location']}
+                data.update(add_data)
                 json_data = json.dumps(data, ensure_ascii=False)
                 suffix = ',\n'
                 prefix = ''
