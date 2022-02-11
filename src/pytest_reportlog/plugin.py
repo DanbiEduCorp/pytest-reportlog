@@ -45,12 +45,32 @@ class ReportLogPlugin:
             self._file = None
 
     def _write_json_data(self, data):
+        suffix = ',\n'
+        prefix = ''
+        json_data = ''
         try:
-            json_data = json.dumps(data)
+            outcome = data.get('outcome')
+            if outcome and outcome != 'passed':
+                data = {'outcome': outcome, 'location': data['location']}
+                if outcome != 'skipped':
+                    data['message'] = data['longrepr']['reprcrash']['message']
+                json_data = json.dumps(data, ensure_ascii=False)
+                suffix = ',\n'
+                prefix = ''
+            elif data.get('pytest_version', None) is not None:
+                json_data = json.dumps(data, ensure_ascii=False)
+                prefix = '['
+            elif data.get('exitstatus', None) is not None:
+                json_data = json.dumps(data, ensure_ascii=False)
+                suffix = ']'
+            else:
+                pass
         except TypeError:
             data = cleanup_unserializable(data)
             json_data = json.dumps(data)
-        self._file.write(json_data + "\n")
+        if json_data == '':
+            suffix = ''
+        self._file.write(prefix + json_data + suffix)
         self._file.flush()
 
     def pytest_sessionstart(self):
